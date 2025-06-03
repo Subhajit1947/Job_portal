@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ job.title }} - Job Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    .job-detail-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .job-header {
+        background-color: #f8f9fa;
+        padding: 2rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .job-title {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .company-name {
+        color: #7f8c8d;
+        font-size: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .job-meta {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .job-tag {
+        background-color: #e8f4fd;
+        color: #3498db;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.875rem;
+    }
+
+    .job-content {
+        margin-bottom: 2rem;
+    }
+
+    .job-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .job-section-title {
+        color: #2c3e50;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .apply-section {
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .job-meta {
+            gap: 0.5rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="job-detail-container">
+    <div class="job-header">
+        <h1 class="job-title">{{ job.title }}</h1>
+        <p class="company-name">{{ job.company_name }}</p>
+        
+        <div class="job-meta">
+            {% if job.job_type %}
+                <span class="job-tag">{{ job.get_job_type_display }}</span>
+            {% endif %}
+            
+            {% if job.experience_level %}
+                <span class="job-tag">{{ job.get_experience_level_display }}</span>
+            {% endif %}
+            
+            {% if job.mode %}
+                <span class="job-tag">{{job.mode}}</span>
+            {% endif %}
+            
+            {% if job.location %}
+                <span class="job-tag"><i class="bi bi-geo-alt"></i> {{ job.location }}</span>
+            {% endif %}
+            
+            {% if job.salary %}
+                <span class="job-tag job-salary">
+                    {{ job.salary_currency }} {{ job.salary|floatformat:"0" }}
+                </span>
+            {% endif %}
+        </div>
+        
+        <small class="text-muted">Posted {{ job.created_at|timesince }} ago</small>
+    </div>
+
+    <div class="job-content">
+        {% if job.description %}
+        <div class="job-section">
+            <h3 class="job-section-title">Job Description</h3>
+            <div>{{ job.description|linebreaks }}</div>
+        </div>
+        {% endif %}
+        
+        {% if job.requirements %}
+        <div class="job-section">
+            <h3 class="job-section-title">Requirements</h3>
+            <div>{{ job.requirements|linebreaks }}</div>
+        </div>
+        {% endif %}
+        
+        {% if job.responsibilities %}
+        <div class="job-section">
+            <h3 class="job-section-title">Responsibilities</h3>
+            <div>{{ job.responsibilities|linebreaks }}</div>
+        </div>
+        {% endif %}
+        
+        {% if job.benefits %}
+        <div class="job-section">
+            <h3 class="job-section-title">Benefits</h3>
+            <div>{{ job.benefits|linebreaks }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if job.application_deadline %}
+    <div class="alert alert-info">
+        <strong>Application Deadline:</strong> {{ job.application_deadline|date:"F j, Y" }}
+    </div>
+    {% endif %}
+
+    <div class="apply-section">
+        {% if user.is_authenticated %}
+            {% if user.Profile.role == 'SEEKER' %}
+                {% if not has_applied %}
+                    <h3>Apply for This Position</h3>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button type="submit" class="btn btn-primary">Submit Application</button>
+                    </form>
+                {% else %}
+                    <div class="alert alert-success">
+                        You've already applied to this position on {{ application_date|date:"F j, Y" }}.
+                        <a href="{% url 'jobs:my_applications' %}">View your applications</a>
+                    </div>
+                {% endif %}
+            {% endif %}
+        {% else %}
+            <div class="alert alert-warning">
+                Please <a href="{% url 'login' %}?next={% url 'jobs:detail' job.id %}">login</a> as a job seeker to apply.
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="action-buttons">
+        {% if user.is_authenticated and user.Profile.role == 'POSTER' and job.poster == user %}
+            <a href="#" class="btn btn-outline-primary">Edit Job</a>
+            <a href="#" class="btn btn-outline-danger">Delete Job</a>
+        {% endif %}
+        <a href="/jobs/" class="btn btn-secondary">Back to Jobs</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any interactive functionality here
+    // Example: Track job views
+    if (typeof ga !== 'undefined') {
+        ga('send', 'event', 'Job', 'View', '{{ job.title }}');
+    }
+    
+    // Example: Save job click handler
+    document.querySelector('.save-job-btn')?.addEventListener('click', function() {
+        // Implement save job functionality
+    });
+});
+</script>
+{% endblock %}

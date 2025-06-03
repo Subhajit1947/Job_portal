@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Job Listings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .job-list-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .job-search-header {
+        background-color: #f8f9fa;
+        padding: 2rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .job-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .job-card:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transform: translateY(-3px);
+    }
+
+    .job-title {
+        color: #2c3e50;
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .company-name {
+        color: #7f8c8d;
+        font-weight: 500;
+    }
+
+    .job-meta {
+        display: flex;
+        gap: 1rem;
+        margin: 1rem 0;
+        flex-wrap: wrap;
+    }
+
+    .job-tag {
+        background-color: #e8f4fd;
+        color: #3498db;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.875rem;
+    }
+
+    .job-salary {
+        font-weight: 600;
+        color: #27ae60;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #7f8c8d;
+    }
+
+    @media (max-width: 768px) {
+        .job-meta {
+            gap: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="job-list-container">
+    <div class="job-search-header">
+        <h1>Find Your Next Opportunity</h1>
+        <form method="get" class="row g-3">
+            <div class="col-md-8">
+                <input type="text" name="q" class="form-control" placeholder="Job title, keywords, or company" value="{{ request.GET.q }}">
+            </div>
+            <div class="col-md-3">
+                <select name="location" class="form-select">
+                    <option value="">All Locations</option>
+                    <!-- {% for location in locations %}
+                        <option value="{{ location }}" {% if request.GET.location == location %}selected{% endif %}>{{ location }}</option>
+                    {% endfor %} -->
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </form>
+    </div>
+
+    {% if job_list %}
+        <div class="job-listings">
+            {% for job in job_list %}
+                <div class="job-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h2 class="job-title">
+                                <a href="/jobs/{{job.slug}}/">{{ job.title }}</a>
+                            </h2>
+                            <p class="company-name">{{ job.company_name }}</p>
+                        </div>
+                        {% if user.is_authenticated and user.Profile.role == 'POSTER' and job.poster == user %}
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="jobActions-{{ job.id }}" data-bs-toggle="dropdown">
+                                    Actions
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#">Edit</a></li>
+                                    <li><a class="dropdown-item text-danger" href="#">Delete</a></li>
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="job-meta">
+                        
+                        <span class="job-tag">{{ job.get_job_type_display }}</span>
+                        <span class="job-tag">{{ job.get_experience_level_display }}</span>
+                        {% if job.mode %}
+                            <span class="job-tag">{{job.mode}}</span>
+                        {% endif %}
+                        {% if job.location %}
+                            <span class="job-tag"><i class="bi bi-geo-alt"></i> {{ job.location }}</span>
+                        {% endif %}
+                    </div>
+
+                    {% if job.salary %}
+                        <div class="job-salary">
+                            {{ job.salary_currency }} {{ job.salary|floatformat:"0" }} per month
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <small class="text-muted">Posted {{ job.created_at|timesince }} ago</small>
+                        <a href="/jobs/{{job.slug}}" class="btn btn-sm btn-outline-primary">View Details</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="pagination">
+            {% if job_list.has_previous %}
+                <a href="?page={{ job_list.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-outline-primary me-2">Previous</a>
+            {% endif %}
+            
+            <span class="current-page btn btn-primary mx-2">
+                Page {{ job_list.number }} of {{ job_list.paginator.num_pages }}
+            </span>
+            
+            {% if job_list.has_next %}
+                <a href="?page={{ job_list.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-outline-primary ms-2">Next</a>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-briefcase" style="font-size: 3rem;"></i>
+            <h3>No jobs found</h3>
+            <p>Try adjusting your search filters</p>
+            {% if user.is_authenticated and user.Profile.role == 'POSTER' %}
+                <a href="{% url 'jobs:create' %}" class="btn btn-primary mt-3">Post a Job</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const searchTag=document.querySelector('.form-select')
+    const callApi=async()=>{
+        const resp=await fetch('/jobs/city/locations/')
+        const jsonresp=await resp.json()
+        const locations=jsonresp.locations
+        
+        locations.forEach((loc) => {
+            const option = document.createElement("option");
+            option.value = loc;
+            option.textContent = loc;
+            searchTag.appendChild(option);
+        });
+
+        
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any interactive functionality here
+        // Example: Save job clicks for analytics
+        const params = new URLSearchParams(window.location.search);
+        const location = params.get("location");
+        if(location){
+            const option = document.createElement("option");
+            option.value = location;
+            option.textContent = location;
+            option.selected = true; // This ensures the option is pre-selected
+            searchTag.appendChild(option);
+        }
+        else{
+            callApi()
+        }
+        
+        document.querySelectorAll('.job-title a').forEach(link => {
+            link.addEventListener('click', function() {
+                // Could send analytics event here
+                console.log('Job viewed:', this.textContent);
+            });
+        });
+    });
+
+</script>
+{% endblock %}

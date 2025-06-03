@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Registration Page{% endblock %}
+
+{% block extra_css %}
+<style>
+    .registration-container {
+        max-width: 500px;
+        margin: 2rem auto;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+    }
+    
+    .registration-title {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        color: #2c3e50;
+    }
+    
+    .registration-form .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .registration-form label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #2c3e50;
+    }
+    
+    .registration-form input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+    
+    .registration-form input:focus {
+        border-color: #3498db;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+    
+    .btn-register {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .btn-register:hover {
+        background-color: #2980b9;
+    }
+    
+    .login-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        color: #7f8c8d;
+    }
+    
+    .login-link a {
+        color: #3498db;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+    
+    .login-link a:hover {
+        color: #2980b9;
+        text-decoration: underline;
+    }
+    
+    /* Error message styling */
+    .errorlist {
+        color: #e74c3c;
+        margin-top: 0.5rem;
+        padding-left: 0;
+        list-style: none;
+    }
+    
+    .errorlist li {
+        font-size: 0.9rem;
+    }
+    
+    /* Role selection styling */
+    .role-selection {
+        margin: 1.5rem 0;
+    }
+    
+    .role-options {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    .role-option {
+        flex: 1;
+    }
+    
+    .role-option input[type="radio"] {
+        display: none;
+    }
+    
+    .role-option label {
+        display: block;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .role-option input[type="radio"]:checked + label {
+        border-color: #3498db;
+        background-color: rgba(52, 152, 219, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="registration-container">
+    <h2 class="registration-title">Login to Your Account</h2>
+    
+    <form method="post" class="registration-form">
+        {% csrf_token %}
+        
+        <!-- Username Field -->
+        <div class="form-group">
+            <label for="id_username">Username</label>
+            {{ form.username }}
+            {% if form.username.errors %}
+                <ul class="errorlist">
+                    {% for error in form.username.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        
+        <!-- Password Fields -->
+        <div class="form-group">
+            <label for="id_password1">Password</label>
+            {{ form.password }}
+            {% if form.password.errors %}
+                <ul class="errorlist">
+                    {% for error in form.password1.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        
+        <button type="submit" class="btn-register">Login</button>
+    </form>
+    
+    <div class="login-link">
+        Already have an account? <a href="{% url 'register' %}">Register</a>
+    </div>
+</div>
+{% endblock %}

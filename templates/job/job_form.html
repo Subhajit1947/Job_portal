@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Post{% endif %} Job{% endblock %}
+
+{% block extra_css %}
+<style>
+    .job-form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: #2c3e50;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        outline: none;
+    }
+
+    .form-text {
+        font-size: 0.875rem;
+        color: #7f8c8d;
+        margin-top: 0.25rem;
+    }
+
+    .btn-submit {
+        background-color: #3498db;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        display: block;
+        width: 100%;
+    }
+
+    .btn-submit:hover {
+        background-color: #2980b9;
+    }
+
+    .errorlist {
+        color: #e74c3c;
+        margin-top: 0.5rem;
+        padding-left: 0;
+        list-style: none;
+        font-size: 0.875rem;
+    }
+
+    /* Rich text editor styling */
+    .django-ckeditor-widget {
+        width: 100% !important;
+    }
+
+    /* Salary fields inline */
+    .salary-fields {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .salary-fields .form-group {
+        flex: 1;
+    }
+
+    /* Remote work toggle */
+    .toggle-group {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+        background-color: #3498db;
+    }
+
+    input:checked + .toggle-slider:before {
+        transform: translateX(26px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="job-form-container">
+    <h1 class="form-header">
+        {% if form.instance.pk %}
+            Edit Job Posting
+        {% else %}
+            Post a New Job
+        {% endif %}
+    </h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <!-- Title -->
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}" class="form-label">
+                Job Title *
+            </label>
+            {% render_field form.title class="form-control" placeholder="e.g. Senior Python Developer" %}
+            {% if form.title.errors %}
+                <ul class="errorlist">
+                    {% for error in form.title.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <!-- Category and Type -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="{{ form.category.id_for_label }}" class="form-label">
+                        Category *
+                    </label>
+                    {% render_field form.category class="form-control" %}
+                    {% if form.category.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.category.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="{{ form.job_type.id_for_label }}" class="form-label">
+                        Job Type *
+                    </label>
+                    {% render_field form.job_type class="form-control" %}
+                    {% if form.job_type.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.job_type.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}" class="form-label">
+                Job Description *
+            </label>
+            {% render_field form.description class="form-control" rows="5" %}
+            <small class="form-text">
+                Describe the role, responsibilities, and day-to-day activities
+            </small>
+            {% if form.description.errors %}
+                <ul class="errorlist">
+                    {% for error in form.description.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <!-- Requirements -->
+        <div class="form-group">
+            <label for="{{ form.requirements.id_for_label }}" class="form-label">
+                Requirements *
+            </label>
+            {% render_field form.requirements class="form-control" rows="5" %}
+            <small class="form-text">
+                List required skills, qualifications, and experience
+            </small>
+            {% if form.requirements.errors %}
+                <ul class="errorlist">
+                    {% for error in form.requirements.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <!-- Location and Remote -->
+        <div class="row">
+            <div class="col-md-8">
+                <div class="form-group">
+                    <label for="{{ form.location.id_for_label }}" class="form-label">
+                        Location *
+                    </label>
+                    {% render_field form.location class="form-control" placeholder="e.g. New York, NY or Remote" %}
+                    {% if form.location.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.location.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="form-label">Work Mode</label>
+                    {% render_field form.mode class="form-control" %}
+                    <!-- <div class="toggle-group">
+                        <label class="toggle-switch">
+                            
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span>This is a remote position</span>
+                    </div> -->
+                    {% if form.mode.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.mode.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Salary -->
+        <div class="form-group">
+            <label class="form-label">Salary</label>
+            <div class="salary-fields">
+                <div class="form-group">
+                    {% render_field form.salary class="form-control" placeholder="e.g. 90000" %}
+                    {% if form.salary.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.salary.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {% render_field form.salary_currency class="form-control" %}
+                </div>
+            </div>
+            <small class="form-text">
+                Optional, but recommended for better applicant quality
+            </small>
+        </div>
+
+        <!-- Experience Level -->
+        <div class="form-group">
+            <label for="{{ form.experience_level.id_for_label }}" class="form-label">
+                Experience Level *
+            </label>
+            {% render_field form.experience_level class="form-control" %}
+            {% if form.experience_level.errors %}
+                <ul class="errorlist">
+                    {% for error in form.experience_level.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <!-- Application Deadline -->
+        <div class="form-group">
+            <label for="{{ form.application_deadline.id_for_label }}" class="form-label">
+                Application Deadline
+            </label>
+            {% render_field form.application_deadline class="form-control" type="date" %}
+            <small class="form-text">
+                Leave blank to keep posting active indefinitely
+            </small>
+            {% if form.application_deadline.errors %}
+                <ul class="errorlist">
+                    {% for error in form.application_deadline.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn-submit">
+            {% if form.instance.pk %}
+                Update Job Posting
+            {% else %}
+                Post Job Opportunity
+            {% endif %}
+        </button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize date picker
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-format salary input
+        const salaryField = document.getElementById('{{ form.salary.id_for_label }}');
+        if (salaryField) {
+            salaryField.addEventListener('blur', function() {
+                if (this.value) {
+                    this.value = parseFloat(this.value).toLocaleString();
+                }
+            });
+        }
+
+        // Toggle remote location suggestion
+        const remoteToggle = document.getElementById('{{ form.is_remote.id_for_label }}');
+        const locationField = document.getElementById('{{ form.location.id_for_label }}');
+        if (remoteToggle && locationField) {
+            remoteToggle.addEventListener('change', function() {
+                if (this.checked && !locationField.value) {
+                    locationField.value = 'Remote';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
