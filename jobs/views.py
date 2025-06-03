@@ -4,6 +4,8 @@ from django.views import generic
 from users.mixins import PosterRequiredMixin
 from .models import Job,Location
 from django.http import JsonResponse
+from django.db.models import Q
+# from ipgeolocation import Geolocation
 def home(request):
     locations=Location.choices
     loc=[]
@@ -32,6 +34,21 @@ class CreateJobView(PosterRequiredMixin,generic.CreateView):
 class ListJobsView(generic.ListView):
     model=Job
     template_name='job/job_list.html'
+    def get_queryset(self):
+
+        queryset = super().get_queryset().filter(is_active=True)
+        location = self.request.GET.get('location')
+        # job_type = self.request.GET.get('job_type')
+        search_query = self.request.GET.get('q')
+        if location:
+            queryset = queryset.filter(location__icontains=location)
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(job_type__icontains=search_query) |
+                Q(company_name__icontains=search_query))
+        
+        return queryset
 
 class JobDetailsView(generic.DetailView):
     model=Job

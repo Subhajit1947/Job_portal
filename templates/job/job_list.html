@@ -187,31 +187,45 @@
         const resp=await fetch('/jobs/city/locations/')
         const jsonresp=await resp.json()
         const locations=jsonresp.locations
-        
-        locations.forEach((loc) => {
-            const option = document.createElement("option");
-            option.value = loc;
-            option.textContent = loc;
-            searchTag.appendChild(option);
-        });
+        const params = new URLSearchParams(window.location.search);
+        const location = params.get("location");
+        if(location){
+            locations.forEach((loc) => {
+                const option = document.createElement("option");
+                option.value = loc;
+                option.textContent = loc;
+                if(loc==location){
+                    option.selected = true;
+                }
+                searchTag.appendChild(option);
+            });
+        }
+        else{
+            locations.forEach((loc) => {
+                const option = document.createElement("option");
+                option.value = loc;
+                option.textContent = loc;
+                searchTag.appendChild(option);
+            });
+        }
 
         
     }
     document.addEventListener('DOMContentLoaded', function() {
         // Add any interactive functionality here
         // Example: Save job clicks for analytics
-        const params = new URLSearchParams(window.location.search);
-        const location = params.get("location");
-        if(location){
-            const option = document.createElement("option");
-            option.value = location;
-            option.textContent = location;
-            option.selected = true; // This ensures the option is pre-selected
-            searchTag.appendChild(option);
-        }
-        else{
+        // const params = new URLSearchParams(window.location.search);
+        // const location = params.get("location");
+        // if(location){
+        //     const option = document.createElement("option");
+        //     option.value = location;
+        //     option.textContent = location;
+        //     option.selected = true; // This ensures the option is pre-selected
+        //     searchTag.appendChild(option);
+        // }
+        // else{
             callApi()
-        }
+        // }
         
         document.querySelectorAll('.job-title a').forEach(link => {
             link.addEventListener('click', function() {
